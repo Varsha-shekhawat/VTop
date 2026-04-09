@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skills - Varsha Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); min-height: 100vh; color: #e2e8f0; }
+    header {
+        height: 64px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px);
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0 24px; position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+        border-bottom: 1px solid rgba(99, 102, 241, 0.2); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+    }
+    .logo { font-size: 20px; font-weight: 700; background: linear-gradient(135deg, #818cf8, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
+    .menu-btn { font-size: 22px; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 10px; transition: 0.3s; background: rgba(99, 102, 241, 0.1); }
+    .menu-btn:hover { background: rgba(99, 102, 241, 0.25); }
+    .header-menu { display: flex; gap: 4px; }
+    .header-menu a { cursor: pointer; font-size: 13px; padding: 8px 14px; border-radius: 8px; transition: all 0.3s; color: #94a3b8; text-decoration: none; font-weight: 500; }
+    .header-menu a:hover { background: rgba(99, 102, 241, 0.15); color: #c7d2fe; }
+    .header-menu a.active { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; }
+    .sidebar {
+        position: fixed; top: 64px; left: 0; width: 68px; height: calc(100vh - 64px);
+        background: rgba(15, 23, 42, 0.98); overflow: hidden; transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        border-right: 1px solid rgba(99, 102, 241, 0.1); z-index: 999;
+    }
+    .sidebar.open { width: 240px; }
+    .sidebar ul { list-style: none; padding: 12px 8px; }
+    .sidebar li { padding: 12px 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; white-space: nowrap; transition: all 0.3s; border-radius: 10px; margin-bottom: 4px; font-size: 14px; color: #94a3b8; }
+    .sidebar li:hover { background: rgba(99, 102, 241, 0.15); color: #c7d2fe; }
+    .sidebar li.active { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; }
+    .sidebar li .icon { font-size: 18px; min-width: 24px; text-align: center; }
+    .sidebar li .label { opacity: 0; transition: opacity 0.2s ease; font-weight: 500; }
+    .sidebar.open li .label { opacity: 1; }
+    .main { margin-top: 64px; margin-left: 68px; padding: 40px; min-height: calc(100vh - 64px); display: flex; justify-content: center; align-items: center; }
+    .content-card {
+        max-width: 700px; width: 100%; padding: 48px; border-radius: 24px;
+        background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(20px);
+        border: 1px solid rgba(99, 102, 241, 0.15);
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+        animation: fadeUp 0.8s ease;
+    }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    .content-card h1 { font-size: 28px; font-weight: 700; margin-bottom: 28px; background: linear-gradient(135deg, #818cf8, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .skills-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .skill-item {
+        padding: 20px; border-radius: 14px; background: rgba(15, 23, 42, 0.5);
+        border: 1px solid rgba(99, 102, 241, 0.1); transition: all 0.3s;
+    }
+    .skill-item:hover { transform: translateY(-2px); border-color: rgba(99, 102, 241, 0.3); box-shadow: 0 8px 30px rgba(99, 102, 241, 0.1); }
+    .skill-item .skill-name { font-weight: 600; font-size: 15px; color: #c7d2fe; margin-bottom: 8px; }
+    .skill-bar { height: 6px; border-radius: 3px; background: rgba(99, 102, 241, 0.15); overflow: hidden; }
+    .skill-bar .fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #818cf8, #a78bfa); transition: width 1s ease; }
+    @media (max-width: 768px) { .main { margin-left: 0; padding: 20px; } .sidebar { display: none; } .skills-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+    <div style="display:flex;align-items:center;gap:16px;">
+        <div class="menu-btn" onclick="toggleSidebar()">☰</div>
+        <div class="logo">VTOP Portfolio</div>
+    </div>
+    <div class="header-menu">
+        <a href="vtop.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="skill.html" class="active">Skills</a>
+        <a href="projects.html">Projects</a>
+        <a href="education.html">Education</a>
+        <a href="contact.html">Contact</a>
+        <a href="help.html">Help</a>
+    </div>
+</header>
+<div class="sidebar" id="sidebar">
+    <ul>
+        <li onclick="go('vtop.html')"><span class="icon">🏠</span> <span class="label">Home</span></li>
+        <li onclick="go('about.html')"><span class="icon">ℹ️</span> <span class="label">About</span></li>
+        <li class="active" onclick="go('skill.html')"><span class="icon">🛠</span> <span class="label">Skills</span></li>
+        <li onclick="go('projects.html')"><span class="icon">💻</span> <span class="label">Projects</span></li>
+        <li onclick="go('education.html')"><span class="icon">🎓</span> <span class="label">Education</span></li>
+        <li onclick="go('contact.html')"><span class="icon">📞</span> <span class="label">Contact</span></li>
+        <li onclick="go('help.html')"><span class="icon">❓</span> <span class="label">Help</span></li>
+    </ul>
+</div>
+<div class="main">
+    <div class="content-card" id="skills-content">
+        <h1>My Skills</h1>
+        <div class="skills-grid">
+            <div class="skill-item"><div class="skill-name">☕ Java</div><div class="skill-bar"><div class="fill" style="width:85%"></div></div></div>
+            <div class="skill-item"><div class="skill-name">🌐 HTML & CSS</div><div class="skill-bar"><div class="fill" style="width:90%"></div></div></div>
+            <div class="skill-item"><div class="skill-name">⚡ JavaScript</div><div class="skill-bar"><div class="fill" style="width:80%"></div></div></div>
+            <div class="skill-item"><div class="skill-name">📊 DSA</div><div class="skill-bar"><div class="fill" style="width:75%"></div></div></div>
+            <div class="skill-item"><div class="skill-name">🗄️ SQL</div><div class="skill-bar"><div class="fill" style="width:70%"></div></div></div>
+            <div class="skill-item"><div class="skill-name">⚛️ React</div><div class="skill-bar"><div class="fill" style="width:65%"></div></div></div>
+        </div>
+    </div>
+</div>
+<script>
+    function toggleSidebar() { document.getElementById("sidebar").classList.toggle("open"); }
+    function go(page) { window.location.href = page; }
+</script>
+</body>
+</html>
