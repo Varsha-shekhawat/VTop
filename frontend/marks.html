@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marks — Varsha Shekhawat</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <div class="menu-btn" onclick="toggleSidebar()">☰</div>
+        <div class="logo">VTop Portal</div>
+    </div>
+    <nav class="header-menu">
+        <a href="vtop.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="skill.html">Skills</a>
+        <a href="attendance.html">Attendance</a>
+        <a href="marks.html" class="active">Marks</a>
+        <a href="contact.html">Contact</a>
+        <a href="help.html">Help</a>
+    </nav>
+</header>
+
+<div class="sidebar" id="sidebar">
+    <ul>
+        <li onclick="go('vtop.html')"><span class="icon">🏠</span><span class="label">Home</span></li>
+        <li onclick="go('about.html')"><span class="icon">👤</span><span class="label">About</span></li>
+        <li onclick="go('skill.html')"><span class="icon">🛠</span><span class="label">Skills</span></li>
+        <li onclick="go('attendance.html')"><span class="icon">📋</span><span class="label">Attendance</span></li>
+        <li class="active" onclick="go('marks.html')"><span class="icon">📝</span><span class="label">Marks</span></li>
+        <li onclick="go('contact.html')"><span class="icon">📬</span><span class="label">Contact</span></li>
+        <li onclick="go('help.html')"><span class="icon">❓</span><span class="label">Help</span></li>
+    </ul>
+</div>
+
+<div class="main">
+    <div class="content-card">
+        <h1>Marks & CGPA</h1>
+        <p class="subtitle">Semester-wise academic performance</p>
+
+        <!-- Semester Selector -->
+        <div class="semester-selector" id="sem-selector">
+            <p class="loading-text">Loading semesters...</p>
+        </div>
+
+        <!-- Marks Table -->
+        <div id="marks-content">
+            <p class="loading-text">Select a semester to view marks</p>
+        </div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+    function gradeClass(grade) {
+        if (!grade) return '';
+        const g = grade.toUpperCase().replace('+', '-plus');
+        if (g === 'A-PLUS') return 'a-plus';
+        if (g === 'A') return 'a';
+        if (g === 'B-PLUS') return 'b-plus';
+        if (g === 'B') return 'b';
+        return 'c';
+    }
+
+    async function loadMarks(semNum) {
+        document.querySelectorAll('.sem-btn').forEach(b => {
+            b.classList.toggle('active', parseInt(b.dataset.sem) === semNum);
+        });
+
+        const data = await fetchAPI(`marks?semester=${semNum}`);
+        const container = document.getElementById('marks-content');
+
+        if (!data) {
+            container.innerHTML = '<p class="loading-text">Failed to load marks data.</p>';
+            return;
+        }
+
+        const rows = data.subjects.map(s => `
+            <tr>
+                <td class="subject-name">${s.subject}</td>
+                <td>${s.marks_obtained} / ${s.max_marks}</td>
+                <td><span class="grade ${gradeClass(s.grade)}">${s.grade}</span></td>
+                <td>${s.credits}</td>
+            </tr>
+        `).join('');
+
+        container.innerHTML = `
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>Marks</th>
+                        <th>Grade</th>
+                        <th>Credits</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+            <div class="summary-bar">
+                <div class="summary-item">
+                    <div class="summary-val">${data.summary.totalMarks} / ${data.summary.totalMaxMarks}</div>
+                    <div class="summary-label">Total Marks</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-val">${data.summary.percentage}%</div>
+                    <div class="summary-label">Percentage</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-val" style="color:#34d399;">${data.summary.cgpa}</div>
+                    <div class="summary-label">CGPA</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-val">${data.summary.totalCredits}</div>
+                    <div class="summary-label">Credits</div>
+                </div>
+            </div>
+        `;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const semesters = await fetchAPI('semesters');
+        if (semesters && semesters.length > 0) {
+            const selector = document.getElementById('sem-selector');
+            selector.innerHTML = semesters.map(s =>
+                `<button class="sem-btn${s.semester_number === 1 ? ' active' : ''}" data-sem="${s.semester_number}" onclick="loadMarks(${s.semester_number})">${s.label}</button>`
+            ).join('');
+            loadMarks(1);
+        }
+    });
+</script>
+</body>
+</html>

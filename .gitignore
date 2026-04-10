@@ -1,4 +1,8 @@
 node_modules/
 portfolio.db
+portfolio.db-wal
+portfolio.db-shm
 *.log
+.env
 .DS_Store
+Thumbs.db

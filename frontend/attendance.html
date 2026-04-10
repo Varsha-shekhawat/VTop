@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance — Varsha Shekhawat</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <div class="menu-btn" onclick="toggleSidebar()">☰</div>
+        <div class="logo">VTop Portal</div>
+    </div>
+    <nav class="header-menu">
+        <a href="vtop.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="skill.html">Skills</a>
+        <a href="attendance.html" class="active">Attendance</a>
+        <a href="marks.html">Marks</a>
+        <a href="contact.html">Contact</a>
+        <a href="help.html">Help</a>
+    </nav>
+</header>
+
+<div class="sidebar" id="sidebar">
+    <ul>
+        <li onclick="go('vtop.html')"><span class="icon">🏠</span><span class="label">Home</span></li>
+        <li onclick="go('about.html')"><span class="icon">👤</span><span class="label">About</span></li>
+        <li onclick="go('skill.html')"><span class="icon">🛠</span><span class="label">Skills</span></li>
+        <li class="active" onclick="go('attendance.html')"><span class="icon">📋</span><span class="label">Attendance</span></li>
+        <li onclick="go('marks.html')"><span class="icon">📝</span><span class="label">Marks</span></li>
+        <li onclick="go('contact.html')"><span class="icon">📬</span><span class="label">Contact</span></li>
+        <li onclick="go('help.html')"><span class="icon">❓</span><span class="label">Help</span></li>
+    </ul>
+</div>
+
+<div class="main">
+    <div class="content-card">
+        <h1>Attendance</h1>
+        <p class="subtitle">Subject-wise attendance percentage</p>
+
+        <!-- Semester Selector -->
+        <div class="semester-selector" id="sem-selector">
+            <p class="loading-text">Loading semesters...</p>
+        </div>
+
+        <!-- Attendance Table -->
+        <div id="attendance-content">
+            <p class="loading-text">Select a semester to view attendance</p>
+        </div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+    let currentSem = 1;
+
+    function getColor(pct) {
+        if (pct >= 85) return 'green';
+        if (pct >= 75) return 'yellow';
+        return 'red';
+    }
+
+    async function loadAttendance(semNum) {
+        currentSem = semNum;
+        // Update active button
+        document.querySelectorAll('.sem-btn').forEach(b => {
+            b.classList.toggle('active', parseInt(b.dataset.sem) === semNum);
+        });
+
+        const data = await fetchAPI(`attendance?semester=${semNum}`);
+        const container = document.getElementById('attendance-content');
+
+        if (!data) {
+            container.innerHTML = '<p class="loading-text">Failed to load attendance data.</p>';
+            return;
+        }
+
+        const rows = data.subjects.map(s => {
+            const color = getColor(s.percentage);
+            return `
+                <tr>
+                    <td class="subject-name">${s.subject}</td>
+                    <td>${s.classes_attended} / ${s.total_classes}</td>
+                    <td>
+                        <div class="att-bar-wrap">
+                            <div class="att-bar"><div class="fill ${color}" style="width:${s.percentage}%"></div></div>
+                            <span class="att-val ${color}">${s.percentage}%</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        const overallColor = getColor(data.overall.percentage);
+
+        container.innerHTML = `
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>Classes</th>
+                        <th>Attendance</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+            <div class="summary-bar">
+                <div class="summary-item">
+                    <div class="summary-val">${data.overall.attended} / ${data.overall.total}</div>
+                    <div class="summary-label">Total Classes</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-val" style="color:${overallColor === 'green' ? '#34d399' : overallColor === 'yellow' ? '#fbbf24' : '#f87171'}">${data.overall.percentage}%</div>
+                    <div class="summary-label">Overall Attendance</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-val">${data.semester.label}</div>
+                    <div class="summary-label">${data.semester.year}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const semesters = await fetchAPI('semesters');
+        if (semesters && semesters.length > 0) {
+            const selector = document.getElementById('sem-selector');
+            selector.innerHTML = semesters.map(s =>
+                `<button class="sem-btn${s.semester_number === 1 ? ' active' : ''}" data-sem="${s.semester_number}" onclick="loadAttendance(${s.semester_number})">${s.label}</button>`
+            ).join('');
+            // Load first semester by default
+            loadAttendance(1);
+        }
+    });
+</script>
+</body>
+</html>
