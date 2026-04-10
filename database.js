@@ -8,8 +8,6 @@ function initializeDatabase() {
 
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
-
-    // Create tables
     db.exec(`
         CREATE TABLE IF NOT EXISTS about (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -83,8 +81,6 @@ function initializeDatabase() {
             sort_order INTEGER DEFAULT 0
         );
     `);
-
-    // Seed data only if tables are empty
     const aboutCount = db.prepare('SELECT COUNT(*) as count FROM about').get();
     if (aboutCount.count === 0) {
         seedData(db);
@@ -97,25 +93,25 @@ function initializeDatabase() {
 function seedData(db) {
     // ─── About ───
     db.prepare(`INSERT INTO about (name, title, bio, university, tags) VALUES (?, ?, ?, ?, ?)`)
-      .run(
-        'Varsha Shekhawat',
-        'Computer Science Engineer',
-        'Hello! My name is Varsha Shekhawat. I am a Computer Science student at VIT-AP University. I love building creative and efficient applications. I am passionate about web development, problem-solving, and creating user-friendly solutions.',
-        'VIT-AP University',
-        JSON.stringify(['CS Student', 'Web Developer', 'VIT-AP', 'Full Stack'])
-      );
+        .run(
+            'Varsha Shekhawat',
+            'Computer Science Engineer',
+            'Hello! My name is Varsha Shekhawat. I am a Computer Science student at VIT-AP University. I love building creative and efficient applications. I am passionate about web development, problem-solving, and creating user-friendly solutions.',
+            'VIT-AP University',
+            JSON.stringify(['CS Student', 'Web Developer', 'VIT-AP', 'Full Stack'])
+        );
 
     // ─── Skills ───
     const insertSkill = db.prepare('INSERT INTO skills (name, icon, proficiency, category) VALUES (?, ?, ?, ?)');
     const skills = [
-        ['Java',          '☕', 85, 'Programming'],
-        ['HTML & CSS',    '🌐', 90, 'Frontend'],
-        ['JavaScript',    '⚡', 80, 'Frontend'],
-        ['DSA',           '📊', 75, 'Computer Science'],
-        ['SQL',           '🗄️', 70, 'Database'],
-        ['React',         '⚛️', 65, 'Frontend'],
-        ['Node.js',       '🟢', 70, 'Backend'],
-        ['Git & GitHub',  '🔀', 75, 'Tools']
+        ['Java', '☕', 85, 'Programming'],
+        ['HTML & CSS', '🌐', 90, 'Frontend'],
+        ['JavaScript', '⚡', 80, 'Frontend'],
+        ['DSA', '📊', 75, 'Computer Science'],
+        ['SQL', '🗄️', 70, 'Database'],
+        ['React', '⚛️', 65, 'Frontend'],
+        ['Node.js', '🟢', 70, 'Backend'],
+        ['Git & GitHub', '🔀', 75, 'Tools']
     ];
     const insertSkills = db.transaction((items) => {
         for (const s of items) insertSkill.run(...s);
@@ -131,17 +127,17 @@ function seedData(db) {
     const insertAtt = db.prepare('INSERT INTO attendance (semester_id, subject, classes_attended, total_classes, percentage) VALUES (?, ?, ?, ?, ?)');
     const attendance = [
         // Sem 1
-        [1, 'Web Technologies',              38, 42, 90.5],
-        [1, 'Theory of Computation',         35, 40, 87.5],
+        [1, 'Web Technologies', 38, 42, 90.5],
+        [1, 'Theory of Computation', 35, 40, 87.5],
         [1, 'Data Structures and Algorithm', 40, 44, 90.9],
-        [1, 'Operating Systems',             32, 38, 84.2],
-        [1, 'English',                       28, 30, 93.3],
+        [1, 'Operating Systems', 32, 38, 84.2],
+        [1, 'English', 28, 30, 93.3],
         // Sem 2
-        [2, 'Web Technologies',              33, 38, 86.8],
-        [2, 'Theory of Computation',         36, 42, 85.7],
-        [2, 'Data Structures and Algorithm', 39, 43, 90.7],
-        [2, 'Operating Systems',             35, 40, 87.5],
-        [2, 'English',                       27, 30, 90.0],
+        [2, 'OOPS', 33, 38, 86.8],
+        [2, 'Information Technology', 36, 42, 85.7],
+        [2, 'Software Engineering', 39, 43, 90.7],
+        [2, 'Internet Of Things', 35, 40, 87.5],
+        [2, 'Discrete Mathematics', 27, 30, 90.0],
     ];
     const insertAtts = db.transaction((items) => {
         for (const a of items) insertAtt.run(...a);
@@ -152,17 +148,17 @@ function seedData(db) {
     const insertMark = db.prepare('INSERT INTO marks (semester_id, subject, marks_obtained, max_marks, grade, credits) VALUES (?, ?, ?, ?, ?, ?)');
     const marksData = [
         // Sem 1
-        [1, 'Web Technologies',              82, 100, 'A',  4],
-        [1, 'Theory of Computation',         75, 100, 'B+', 4],
+        [1, 'Web Technologies', 82, 100, 'A', 4],
+        [1, 'Theory of Computation', 75, 100, 'B+', 4],
         [1, 'Data Structures and Algorithm', 88, 100, 'A+', 4],
-        [1, 'Operating Systems',             71, 100, 'B',  3],
-        [1, 'English',                       85, 100, 'A',  2],
+        [1, 'Operating Systems', 71, 100, 'B', 3],
+        [1, 'English', 85, 100, 'A', 2],
         // Sem 2
-        [2, 'Web Technologies',              78, 100, 'B+', 4],
-        [2, 'Theory of Computation',         80, 100, 'A',  4],
-        [2, 'Data Structures and Algorithm', 85, 100, 'A',  4],
-        [2, 'Operating Systems',             74, 100, 'B+', 3],
-        [2, 'English',                       88, 100, 'A+', 2],
+        [2, 'OOPS', 78, 100, 'B+', 4],
+        [2, 'Information Technology', 80, 100, 'A', 4],
+        [2, 'Software Engineering', 85, 100, 'A', 4],
+        [2, 'Internet Of Things', 74, 100, 'B+', 3],
+        [2, 'Discrete Mathematics', 88, 100, 'A+', 2],
     ];
     const insertMarks = db.transaction((items) => {
         for (const m of items) insertMark.run(...m);
@@ -172,10 +168,10 @@ function seedData(db) {
     // ─── Contact Info ───
     const insertContact = db.prepare('INSERT INTO contact_info (type, icon, label, value, url) VALUES (?, ?, ?, ?, ?)');
     const contacts = [
-        ['email',    '📧', 'Email',    'varsha@example.com',            'mailto:varsha@example.com'],
-        ['phone',    '📱', 'Phone',    '+91-XXXXXXXXXX',                null],
-        ['linkedin', '💼', 'LinkedIn', 'linkedin.com/in/varsha',        'https://linkedin.com/in/varsha'],
-        ['github',   '🐙', 'GitHub',   'github.com/Varsha-shekhawat',  'https://github.com/Varsha-shekhawat']
+        ['email', '📧', 'Email', 'varshashekhawatt@gmail.com', 'mailto:varshashekhawatt@gmail.com'],
+        ['phone', '📱', 'Phone', '+91-6367151890', null],
+        ['linkedin', '💼', 'LinkedIn', 'linkedin.com/in/varsha', 'https://www.linkedin.com/in/varsha-shekhawat-8a0121293?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=ios_app'],
+        ['github', '🐙', 'GitHub', 'github.com/Varsha-shekhawat', 'https://github.com/Varsha-shekhawat']
     ];
     const insertContacts = db.transaction((items) => {
         for (const c of items) insertContact.run(...c);
@@ -185,12 +181,12 @@ function seedData(db) {
     // ─── Help items ───
     const insertHelp = db.prepare('INSERT INTO help_items (question, answer, sort_order) VALUES (?, ?, ?)');
     const helpItems = [
-        ['What is this website?',   'This is a student portal / portfolio website built by Varsha Shekhawat to track academic progress including attendance, marks, skills, and contact information.', 1],
-        ['How do I navigate?',      'Use the top header menu or expand the sidebar by clicking the ☰ hamburger icon to navigate between Home, About, Skills, Attendance, Marks, Contact, and Help.', 2],
+        ['What is this website?', 'This is a student portal / portfolio website built by Varsha Shekhawat to track academic progress including attendance, marks, skills, and contact information.', 1],
+        ['How do I navigate?', 'Use the top header menu or expand the sidebar by clicking the ☰ hamburger icon to navigate between Home, About, Skills, Attendance, Marks, Contact, and Help.', 2],
         ['How does attendance work?', 'Select a semester from the dropdown on the Attendance page to view subject-wise attendance percentages and classes attended.', 3],
-        ['How do marks work?',       'Select a semester from the dropdown on the Marks page to view subject-wise marks, grades, credits, and overall CGPA for that semester.', 4],
-        ['How can I contact?',      'Visit the Contact page to find email, phone, and social media links, or use the contact form to send a message.', 5],
-        ['Page not loading?',       'Make sure the Node.js server is running with "npm start" and check your network connection.', 6],
+        ['How do marks work?', 'Select a semester from the dropdown on the Marks page to view subject-wise marks, grades, credits, and overall CGPA for that semester.', 4],
+        ['How can I contact?', 'Visit the Contact page to find email, phone, and social media links, or use the contact form to send a message.', 5],
+        ['Page not loading?', 'Make sure the Node.js server is running with "npm start" and check your network connection.', 6],
     ];
     const insertHelps = db.transaction((items) => {
         for (const h of items) insertHelp.run(...h);
