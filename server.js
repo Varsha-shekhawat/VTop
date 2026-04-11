@@ -1,20 +1,25 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { initializeDatabase } = require('./database');
+const mongoose = require('mongoose');
+const { About, Skill, Semester, Attendance, Mark, ContactInfo, Message, HelpItem } = require('./models');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const MONGODB_URI = process.env.MONGODB_URI;
 
-// Initialize database
-const db = initializeDatabase();
+// ─── Connect to MongoDB ───
+mongoose.connect(MONGODB_URI)
+    .then(() => console.log('  ✅ Connected to MongoDB'))
+    .catch((err) => {
+        console.error('  ❌ MongoDB connection error:', err.message);
+        process.exit(1);
+    });
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Simple request logger
 app.use((req, res, next) => {
     const start = Date.now();
     res.on('finish', () => {
@@ -28,48 +33,41 @@ app.use((req, res, next) => {
 // Serve static frontend files
 app.use(express.static(path.join(__dirname, 'frontend')));
 
-// ==================== API ROUTES ====================
-
-// GET /api/about
-app.get('/api/about', (req, res) => {
+app.get('/api/about', async (req, res) => {
     try {
-        const about = db.prepare('SELECT * FROM about LIMIT 1').get();
-        if (about && about.tags) about.tags = JSON.parse(about.tags);
+        const about = await About.findOne({}).lean();
         res.json({ success: true, data: about || null });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// GET /api/skills
-app.get('/api/skills', (req, res) => {
+app.get('/api/skills', async (req, res) => {
     try {
-        const skills = db.prepare('SELECT * FROM skills ORDER BY proficiency DESC').all();
+        const skills = await Skill.find({}).sort({ proficiency: -1 }).lean();
         res.json({ success: true, data: skills });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// GET /api/semesters
-app.get('/api/semesters', (req, res) => {
+app.get('/api/semesters', async (req, res) => {
     try {
-        const semesters = db.prepare('SELECT * FROM semesters ORDER BY semester_number ASC').all();
+        const semesters = await Semester.find({}).sort({ semester_number: 1 }).lean();
         res.json({ success: true, data: semesters });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// GET /api/attendance?semester=1
-app.get('/api/attendance', (req, res) => {
+app.get('/api/attendance', async (req, res) => {
     try {
         const semNum = parseInt(req.query.semester) || 1;
-        const semester = db.prepare('SELECT * FROM semesters WHERE semester_number = ?').get(semNum);
+        const semester = await Semester.findOne({ semester_number: semNum }).lean();
         if (!semester) {
             return res.status(404).json({ success: false, error: 'Semester not found' });
         }
-        const records = db.prepare('SELECT * FROM attendance WHERE semester_id = ? ORDER BY id ASC').all(semester.id);
+        const records = await Attendance.find({ semester_number: semNum }).lean();
 
         // Calculate overall attendance
         let totalAttended = 0, totalClasses = 0;
@@ -96,17 +94,15 @@ app.get('/api/attendance', (req, res) => {
     }
 });
 
-// GET /api/marks?semester=1
-app.get('/api/marks', (req, res) => {
+app.get('/api/marks', async (req, res) => {
     try {
         const semNum = parseInt(req.query.semester) || 1;
-        const semester = db.prepare('SELECT * FROM semesters WHERE semester_number = ?').get(semNum);
+        const semester = await Semester.findOne({ semester_number: semNum }).lean();
         if (!semester) {
             return res.status(404).json({ success: false, error: 'Semester not found' });
         }
-        const records = db.prepare('SELECT * FROM marks WHERE semester_id = ? ORDER BY id ASC').all(semester.id);
+        const records = await Mark.find({ semester_number: semNum }).lean();
 
-        // Calculate totals
         let totalMarks = 0, totalMaxMarks = 0, totalCredits = 0;
         records.forEach(r => {
             totalMarks += r.marks_obtained;
@@ -134,18 +130,16 @@ app.get('/api/marks', (req, res) => {
     }
 });
 
-// GET /api/contact
-app.get('/api/contact', (req, res) => {
+app.get('/api/contact', async (req, res) => {
     try {
-        const contacts = db.prepare('SELECT * FROM contact_info ORDER BY id ASC').all();
+        const contacts = await ContactInfo.find({}).lean();
         res.json({ success: true, data: contacts });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// POST /api/contact
-app.post('/api/contact', (req, res) => {
+app.post('/api/contact', async (req, res) => {
     try {
         const { name, email, message } = req.body;
         if (!name || !email || !message) {
@@ -155,42 +149,39 @@ app.post('/api/contact', (req, res) => {
         if (!emailRegex.test(email)) {
             return res.status(400).json({ success: false, error: 'Please provide a valid email.' });
         }
-        const stmt = db.prepare('INSERT INTO messages (name, email, message) VALUES (?, ?, ?)');
-        const result = stmt.run(name.trim().substring(0, 100), email.trim().substring(0, 200), message.trim().substring(0, 2000));
+        const newMessage = await Message.create({
+            name: name.trim().substring(0, 100),
+            email: email.trim().substring(0, 200),
+            message: message.trim().substring(0, 2000),
+        });
         console.log(`  📩 New message from: ${name.trim()}`);
-        res.json({ success: true, message: 'Message sent successfully!', id: Number(result.lastInsertRowid) });
+        res.json({ success: true, message: 'Message sent successfully!', id: newMessage._id });
     } catch (err) {
         res.status(500).json({ success: false, error: 'Failed to send message.' });
     }
 });
 
-// GET /api/messages (admin)
-app.get('/api/messages', (req, res) => {
+app.get('/api/messages', async (req, res) => {
     try {
-        const messages = db.prepare('SELECT * FROM messages ORDER BY created_at DESC').all();
+        const messages = await Message.find({}).sort({ createdAt: -1 }).lean();
         res.json({ success: true, data: messages, count: messages.length });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// GET /api/help
-app.get('/api/help', (req, res) => {
+app.get('/api/help', async (req, res) => {
     try {
-        const items = db.prepare('SELECT * FROM help_items ORDER BY sort_order ASC').all();
+        const items = await HelpItem.find({}).sort({ sort_order: 1 }).lean();
         res.json({ success: true, data: items });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// ==================== FRONTEND ROUTES ====================
-
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'vtop.html'));
 });
-
-// 404
 app.use((req, res) => {
     if (req.path.startsWith('/api/')) {
         res.status(404).json({ success: false, error: 'Endpoint not found.' });
@@ -199,13 +190,12 @@ app.use((req, res) => {
     }
 });
 
-// Start server
 app.listen(PORT, () => {
     console.log(`\n  🚀 VTop Server running at http://localhost:${PORT}\n`);
 });
 
-process.on('SIGINT', () => {
-    db.close();
-    console.log('\n  Database closed. Server stopped.\n');
+process.on('SIGINT', async () => {
+    await mongoose.disconnect();
+    console.log('\n  Database disconnected. Server stopped.\n');
     process.exit(0);
 });

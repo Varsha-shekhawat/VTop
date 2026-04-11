@@ -5,14 +5,16 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "seed": "node seed.js"
   },
-  "keywords": ["portfolio", "fullstack", "express", "sqlite"],
+  "keywords": ["portfolio", "fullstack", "express", "mongodb", "mongoose"],
   "author": "Varsha Shekhawat",
   "license": "ISC",
   "dependencies": {
-    "better-sqlite3": "^12.8.0",
     "cors": "^2.8.6",
-    "express": "^5.2.1"
+    "dotenv": "^16.4.7",
+    "express": "^5.2.1",
+    "mongoose": "^8.13.2"
   }
 }
